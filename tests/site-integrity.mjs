@@ -52,6 +52,11 @@ assert.deepEqual(actualByCommittee, expectedByCommittee, "committee controls fro
 assert.match(html, /http-equiv="Content-Security-Policy"/i, "CSP meta policy");
 assert.match(html, /name="referrer" content="strict-origin-when-cross-origin"/i, "referrer policy");
 assert.match(html, /id="embedded-map"/i, "embedded map region");
+assert.match(
+  html,
+  /https:\/\/www\.gov\.il\/he\/pages\/26elections-info\?chapterIndex=2/,
+  "official Central Elections Committee source link",
+);
 assert.match(app, /travelmode=walking/, "walking travel mode");
 assert.doesNotMatch(app, /\b(?:eval|Function)\s*\(|document\.write|\.innerHTML\s*=/, "unsafe dynamic execution or HTML injection");
 

@@ -907,6 +907,24 @@ summary {
   color: #d9e7ee;
 }
 
+.official-source {
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(103, 232, 249, 0.4);
+  border-radius: 0.8rem;
+  background: rgba(8, 47, 73, 0.72);
+}
+
+.official-source a {
+  color: #67e8f9;
+  font-weight: 800;
+  text-underline-offset: 0.22em;
+}
+
+.official-source a:hover,
+.official-source a:focus-visible {
+  color: #cffafe;
+}
+
 footer {
   padding: 2rem 1rem;
   background: #031827;
