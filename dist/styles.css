@@ -38,6 +38,12 @@ body {
   line-height: 1.55;
 }
 
+.fatal-error {
+  width: min(48rem, calc(100% - 2rem));
+  margin: 4rem auto;
+  padding: 1rem;
+}
+
 button,
 input,
 a {
@@ -517,6 +523,78 @@ input[aria-invalid="true"] {
   font-size: 0.94rem;
 }
 
+.embedded-map-section {
+  margin: 3rem 0;
+  padding: clamp(1.1rem, 3vw, 1.75rem);
+  border: 1px solid var(--border);
+  border-block-start: 0.4rem solid var(--cyan-600);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: var(--shadow);
+  scroll-margin-top: 1rem;
+}
+
+.map-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.map-panel-header h2 {
+  margin-block-end: 0.25rem;
+}
+
+.map-panel-address {
+  margin: 0;
+  color: var(--muted);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.map-status {
+  min-height: 1.55rem;
+  margin: 1rem 0 0.75rem;
+  color: var(--muted);
+}
+
+.embedded-map {
+  display: block;
+  width: 100%;
+  min-height: 29rem;
+  border: 2px solid #8aa5b4;
+  border-radius: 0.8rem;
+  background: var(--blue-50);
+}
+
+.map-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-block-start: 1rem;
+}
+
+.map-primary-action {
+  min-height: 2.9rem;
+  margin: 0;
+  text-decoration: none;
+}
+
+.map-disclaimer {
+  margin: 1rem 0 0;
+  padding: 0.85rem 1rem;
+  border-inline-start: 0.35rem solid #c68d00;
+  border-radius: 0.65rem;
+  background: var(--warning-bg);
+  color: #584500;
+  font-size: 0.94rem;
+}
+
+.map-disclaimer a {
+  color: var(--navy-800);
+  font-weight: 700;
+}
+
 .text-button {
   padding: 0.65rem 0.9rem;
   border: 0;
@@ -937,6 +1015,14 @@ footer p {
     flex-direction: column;
   }
 
+  .map-panel-header {
+    flex-direction: column;
+  }
+
+  .embedded-map {
+    min-height: 23rem;
+  }
+
   .check-details {
     grid-template-columns: 1fr;
   }
@@ -979,6 +1065,15 @@ footer p {
 
   .secondary-button,
   .copy-button {
+    width: 100%;
+  }
+
+  .map-panel-actions {
+    flex-direction: column;
+  }
+
+  .map-panel-actions .primary-button,
+  .map-panel-actions .secondary-button {
     width: 100%;
   }
 }

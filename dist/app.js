@@ -3,8 +3,14 @@
 
   const data = window.POLLING_DATA;
   if (!data || !Array.isArray(data.records)) {
-    document.body.innerHTML =
-      '<main style="max-width:48rem;margin:4rem auto;padding:1rem" dir="rtl"><h1>המידע אינו זמין כרגע</h1><p>נסו לרענן את הדף בעוד כמה רגעים.</p></main>';
+    const failure = document.createElement("main");
+    failure.className = "fatal-error";
+    const heading = document.createElement("h1");
+    heading.textContent = "המידע אינו זמין כרגע";
+    const message = document.createElement("p");
+    message.textContent = "נסו לרענן את הדף בעוד כמה רגעים.";
+    failure.append(heading, message);
+    document.body.replaceChildren(failure);
     return;
   }
 
@@ -27,9 +33,21 @@
   const ballotInput = document.getElementById("ballot-number");
   const ballotError = document.getElementById("ballot-error");
   const resultTemplate = document.getElementById("result-card-template");
+  const embeddedMapSection = document.getElementById("embedded-map-section");
+  const embeddedMapHeading = document.getElementById("embedded-map-heading");
+  const embeddedMapAddress = document.getElementById("embedded-map-address");
+  const embeddedMapStatus = document.getElementById("embedded-map-status");
+  const embeddedMap = document.getElementById("embedded-map");
+  const walkingRouteLink = document.getElementById("walking-route-link");
+  const osmMapLink = document.getElementById("osm-map-link");
   const pageSize = 12;
+  const geocodeCache = new Map();
   let activeResults = [];
   let visibleResultCount = pageSize;
+  let mapLoading = false;
+  let mapAbortController = null;
+  let mapReturnFocusElement = null;
+  let lastGeocodeRequestAt = 0;
 
   function normalize(value) {
     return String(value || "")
@@ -190,12 +208,157 @@
     return [location.place, location.address, location.locality, "ישראל"].filter(Boolean).join(", ");
   }
 
+  function nominatimQuery(location) {
+    return [location.address || location.place, location.locality, "ישראל"].filter(Boolean).join(", ");
+  }
+
   function googleMapsSearchUrl(location) {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(googleMapsQuery(location))}`;
   }
 
   function googleMapsDirectionsUrl(location) {
-    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(googleMapsQuery(location))}&dir_action=navigate`;
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(googleMapsQuery(location))}&travelmode=walking&dir_action=navigate`;
+  }
+
+  function createElement(tagName, className, text) {
+    const element = document.createElement(tagName);
+    if (className) element.className = className;
+    if (text !== undefined) element.textContent = text;
+    return element;
+  }
+
+  function restoreButtonContents(button, nodes) {
+    button.replaceChildren(...nodes.map((node) => node.cloneNode(true)));
+  }
+
+  function mapEmbedUrl(latitude, longitude) {
+    const latitudeDelta = 0.006;
+    const longitudeDelta = 0.009;
+    const params = new URLSearchParams({
+      bbox: [
+        longitude - longitudeDelta,
+        latitude - latitudeDelta,
+        longitude + longitudeDelta,
+        latitude + latitudeDelta,
+      ].join(","),
+      layer: "mapnik",
+      marker: `${latitude},${longitude}`,
+    });
+    return `https://www.openstreetmap.org/export/embed.html?${params.toString()}`;
+  }
+
+  function openStreetMapUrl(latitude, longitude) {
+    const lat = encodeURIComponent(latitude);
+    const lon = encodeURIComponent(longitude);
+    return `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=17/${lat}/${lon}`;
+  }
+
+  async function geocodeLocation(location, signal) {
+    const query = nominatimQuery(location);
+    if (geocodeCache.has(query)) return geocodeCache.get(query);
+
+    const waitTime = Math.max(0, 1100 - (Date.now() - lastGeocodeRequestAt));
+    if (waitTime) {
+      await new Promise((resolve) => window.setTimeout(resolve, waitTime));
+    }
+    lastGeocodeRequestAt = Date.now();
+
+    const params = new URLSearchParams({
+      q: query,
+      format: "jsonv2",
+      addressdetails: "1",
+      limit: "1",
+      countrycodes: "il",
+      "accept-language": "he",
+    });
+    const response = await fetch(`https://nominatim.openstreetmap.org/search?${params.toString()}`, {
+      headers: { Accept: "application/json" },
+      signal,
+    });
+    if (!response.ok) throw new Error("geocoding failed");
+    const matches = await response.json();
+    const firstMatch = Array.isArray(matches) ? matches[0] : null;
+    const latitude = Number(firstMatch?.lat);
+    const longitude = Number(firstMatch?.lon);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+      throw new Error("location not found");
+    }
+    const match = {
+      latitude,
+      longitude,
+      displayName: String(firstMatch.display_name || query),
+    };
+    geocodeCache.set(query, match);
+    return match;
+  }
+
+  function closeEmbeddedMap(shouldFocus = true) {
+    mapAbortController?.abort();
+    mapAbortController = null;
+    mapLoading = false;
+    embeddedMapSection.hidden = true;
+    embeddedMap.hidden = true;
+    embeddedMap.removeAttribute("src");
+    osmMapLink.hidden = true;
+    embeddedMapStatus.textContent = "";
+    if (shouldFocus) {
+      const focusTarget = mapReturnFocusElement?.isConnected
+        ? mapReturnFocusElement
+        : document.querySelector('[role="tab"][aria-selected="true"]');
+      focusTarget?.focus();
+    }
+    mapReturnFocusElement = null;
+  }
+
+  async function showEmbeddedMap(location, returnFocusElement) {
+    mapReturnFocusElement = returnFocusElement || document.activeElement;
+    const addressText = [location.place, location.address, location.locality].filter(Boolean).join(", ");
+    embeddedMapSection.hidden = false;
+    embeddedMapHeading.textContent = location.place ? `מפה: ${location.place}` : "מיקום הקלפי במפה";
+    embeddedMapAddress.textContent = addressText;
+    walkingRouteLink.href = googleMapsDirectionsUrl(location);
+    walkingRouteLink.setAttribute(
+      "aria-label",
+      `פתיחת מסלול הליכה אל ${addressText} ב־Google Maps בחלון חדש. המסלול אינו בהכרח נגיש`,
+    );
+    embeddedMap.hidden = true;
+    embeddedMap.removeAttribute("src");
+    osmMapLink.hidden = true;
+    embeddedMapStatus.textContent = mapLoading
+      ? "מפה אחרת נטענת כעת. נסו שוב בעוד רגע."
+      : "מאתרים את הכתובת ומכינים את המפה…";
+    embeddedMapHeading.focus();
+    embeddedMapSection.scrollIntoView({ block: "start" });
+
+    if (mapLoading) {
+      announce("מפה אחרת נטענת כעת. נסו שוב בעוד רגע.");
+      return;
+    }
+
+    mapLoading = true;
+    const controller = new AbortController();
+    mapAbortController = controller;
+    try {
+      const match = await geocodeLocation(location, controller.signal);
+      embeddedMap.src = mapEmbedUrl(match.latitude, match.longitude);
+      embeddedMap.title = `מפה משוערת של ${addressText}`;
+      embeddedMap.hidden = false;
+      osmMapLink.href = openStreetMapUrl(match.latitude, match.longitude);
+      osmMapLink.setAttribute("aria-label", `פתיחת ${addressText} ב־OpenStreetMap בחלון חדש`);
+      osmMapLink.hidden = false;
+      embeddedMapStatus.textContent = `נמצאה התאמה משוערת: ${match.displayName}`;
+      announce(`המפה המשוערת של ${addressText} מוכנה.`);
+    } catch {
+      if (controller.signal.aborted) return;
+      embeddedMapStatus.textContent =
+        "לא הצלחנו למקם את הכתובת במפה. הכתובת ומסלול ההליכה ב־Google Maps עדיין זמינים.";
+      announce("לא הצלחנו לטעון את המפה המוטמעת. אפשר להשתמש בקישור מסלול ההליכה.");
+    } finally {
+      if (mapAbortController === controller) {
+        mapAbortController = null;
+        mapLoading = false;
+      }
+    }
   }
 
   function createResultCard(location) {
@@ -209,12 +372,18 @@
     card.querySelector(".directions-text").textContent = location.directions.length
       ? location.directions.join(". ")
       : "לא נמסרו הוראות גישה מפורטות בדוח.";
+    const embedMapButton = card.querySelector(".embed-map-button");
+    embedMapButton.setAttribute("aria-label", `הצגת מפה משוערת של ${addressText} בתוך האתר`);
+    embedMapButton.addEventListener("click", () => showEmbeddedMap(location, embedMapButton));
     const mapLink = card.querySelector(".maps-link");
     mapLink.href = googleMapsSearchUrl(location);
     mapLink.setAttribute("aria-label", `הצגת ${addressText} במפות Google בחלון חדש`);
     const directionsLink = card.querySelector(".directions-link");
     directionsLink.href = googleMapsDirectionsUrl(location);
-    directionsLink.setAttribute("aria-label", `קבלת מסלול אל ${addressText} במפות Google בחלון חדש`);
+    directionsLink.setAttribute(
+      "aria-label",
+      `פתיחת מסלול הליכה אל ${addressText} במפות Google בחלון חדש. המסלול אינו בהכרח נגיש`,
+    );
     const copyButton = card.querySelector(".copy-button");
     copyButton.addEventListener("click", async () => {
       try {
@@ -238,8 +407,14 @@
     if (!shown.length) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
-      empty.innerHTML =
-        "<h3>לא נמצאה התאמה</h3><p>בדקו את האיות, נסו להזין רק את שם היישוב, או השתמשו באיתור היישוב.</p>";
+      empty.append(
+        createElement("h3", "", "לא נמצאה התאמה"),
+        createElement(
+          "p",
+          "",
+          "בדקו את האיות, נסו להזין רק את שם היישוב, או השתמשו באיתור היישוב.",
+        ),
+      );
       resultsList.append(empty);
       loadMoreButton.hidden = true;
       return;
@@ -302,7 +477,26 @@
     return contains.length === 1 ? contains[0] : "";
   }
 
-  function checkCardMarkup(record, status) {
+  function appendCheckDetail(list, label, value) {
+    const item = document.createElement("div");
+    const term = createElement("dt", "", label);
+    const description = createElement("dd", "", value);
+    item.append(term, description);
+    list.append(item);
+  }
+
+  function createExternalLink(className, href, label, ariaLabel) {
+    const link = createElement("a", className, label);
+    link.href = href;
+    link.target = "_blank";
+    link.rel = "noopener noreferrer";
+    link.setAttribute("aria-label", ariaLabel);
+    link.append(createElement("span", "external-mark", "↗"));
+    link.lastElementChild.setAttribute("aria-hidden", "true");
+    return link;
+  }
+
+  function createCheckCard(record, status) {
     const addressText = [record.address, record.locality].filter(Boolean).join(", ");
     const title = status === "special"
       ? "הקלפי מסומנת כנגישה מיוחדת"
@@ -315,33 +509,64 @@
     const directions = record.directions || "לא נמסרו הוראות גישה מפורטות בדוח.";
     const mapsUrl = googleMapsSearchUrl(record);
     const routeUrl = googleMapsDirectionsUrl(record);
-    return `
-      <article class="check-card ${status}">
-        <span class="status-badge ${badgeClass}">${badge}</span>
-        <h3>${escapeHtml(title)}</h3>
-        <p>${escapeHtml(explanation)}</p>
-        <dl class="check-details">
-          <div><dt>קלפי</dt><dd>${escapeHtml(record.ballot)}</dd></div>
-          <div><dt>מקום</dt><dd>${escapeHtml(record.place || "לא צוין")}</dd></div>
-          <div><dt>כתובת</dt><dd>${escapeHtml(addressText || "לא צוינה")}</dd></div>
-          <div><dt>הוראות גישה</dt><dd>${escapeHtml(directions)}</dd></div>
-        </dl>
-        <p class="inline-map-note">המיקום במפה מבוסס על כתובת טקסטואלית ועלול להיות משוער.</p>
-        <div class="card-actions check-actions">
-          <a class="secondary-button" href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer" aria-label="הצגת ${escapeHtml(addressText)} במפות Google בחלון חדש">
-            הצגה במפות Google <span class="external-mark" aria-hidden="true">↗</span>
-          </a>
-          <a class="secondary-button" href="${escapeHtml(routeUrl)}" target="_blank" rel="noopener noreferrer" aria-label="קבלת מסלול אל ${escapeHtml(addressText)} במפות Google בחלון חדש">
-            קבלת מסלול <span class="external-mark" aria-hidden="true">↗</span>
-          </a>
-        </div>
-      </article>`;
+    const card = document.createElement("article");
+    card.className = `check-card ${status}`;
+    card.append(
+      createElement("span", `status-badge ${badgeClass}`, badge),
+      createElement("h3", "", title),
+      createElement("p", "", explanation),
+    );
+
+    const details = createElement("dl", "check-details");
+    appendCheckDetail(details, "קלפי", record.ballot);
+    appendCheckDetail(details, "מקום", record.place || "לא צוין");
+    appendCheckDetail(details, "כתובת", addressText || "לא צוינה");
+    appendCheckDetail(details, "הוראות גישה", directions);
+    card.append(details);
+    card.append(
+      createElement(
+        "p",
+        "inline-map-note",
+        "המיקום במפה מבוסס על כתובת טקסטואלית ועלול להיות משוער.",
+      ),
+    );
+
+    const actions = createElement("div", "card-actions check-actions");
+    const embedButton = createElement("button", "secondary-button embed-map-button", "מפה בתוך האתר");
+    embedButton.type = "button";
+    embedButton.setAttribute("aria-label", `הצגת מפה משוערת של ${addressText} בתוך האתר`);
+    embedButton.addEventListener("click", () => showEmbeddedMap(record, embedButton));
+    actions.append(
+      embedButton,
+      createExternalLink(
+        "secondary-button",
+        mapsUrl,
+        "הצגה במפות Google ",
+        `הצגת ${addressText} במפות Google בחלון חדש`,
+      ),
+      createExternalLink(
+        "secondary-button",
+        routeUrl,
+        "מסלול הליכה ",
+        `פתיחת מסלול הליכה אל ${addressText} במפות Google בחלון חדש. המסלול אינו בהכרח נגיש`,
+      ),
+    );
+    card.append(actions);
+    return card;
   }
 
-  function escapeHtml(value) {
-    const node = document.createElement("span");
-    node.textContent = String(value || "");
-    return node.innerHTML;
+  function createUnknownCheckCard() {
+    const card = createElement("article", "check-card unknown");
+    card.append(
+      createElement("span", "status-badge status-unknown", "אין מידע מספיק"),
+      createElement("h3", "", "הקלפי לא נמצאה בדוח הקלפיות הנגישות"),
+      createElement(
+        "p",
+        "",
+        "לא ניתן לקבוע מכך שהקלפי אינה נגישה. בדקו את המספר והיישוב ואמתו את המידע בפרסום הרשמי סמוך למועד הבחירות.",
+      ),
+    );
+    return card;
   }
 
   document.getElementById("check-form").addEventListener("submit", (event) => {
@@ -383,19 +608,14 @@
 
     checkResultSection.hidden = false;
     if (record) {
-      checkResult.innerHTML = checkCardMarkup(record, record.special ? "special" : "accessible");
+      checkResult.replaceChildren(createCheckCard(record, record.special ? "special" : "accessible"));
       announce(
         record.special
           ? `קלפי ${record.ballot} ב${record.locality} מסומנת כנגישה מיוחדת.`
           : `קלפי ${record.ballot} ב${record.locality} מופיעה כנגישה אך אינה מסומנת כנגישה מיוחדת.`,
       );
     } else {
-      checkResult.innerHTML = `
-        <article class="check-card unknown">
-          <span class="status-badge status-unknown">אין מידע מספיק</span>
-          <h3>הקלפי לא נמצאה בדוח הקלפיות הנגישות</h3>
-          <p>לא ניתן לקבוע מכך שהקלפי אינה נגישה. בדקו את המספר והיישוב ואמתו את המידע בפרסום הרשמי סמוך למועד הבחירות.</p>
-        </article>`;
+      checkResult.replaceChildren(createUnknownCheckCard());
       announce(`לא נמצא מידע בדוח עבור קלפי ${rawBallot} ב${locality}.`);
     }
     checkResultHeading.focus();
@@ -409,6 +629,8 @@
     localityInput.focus();
   });
 
+  document.getElementById("close-map").addEventListener("click", () => closeEmbeddedMap());
+
   document.getElementById("use-location").addEventListener("click", () => {
     const button = document.getElementById("use-location");
     if (!navigator.geolocation) {
@@ -417,7 +639,7 @@
       return;
     }
 
-    const originalLabel = button.innerHTML;
+    const originalContents = [...button.childNodes].map((node) => node.cloneNode(true));
     button.disabled = true;
     button.textContent = "מאתרים את היישוב…";
     announce("מאתרים את היישוב לפי המיקום הנוכחי.");
@@ -444,12 +666,12 @@
           areaInput.focus();
         } finally {
           button.disabled = false;
-          button.innerHTML = originalLabel;
+          restoreButtonContents(button, originalContents);
         }
       },
       () => {
         button.disabled = false;
-        button.innerHTML = originalLabel;
+        restoreButtonContents(button, originalContents);
         setFieldError(areaInput, areaError, "הרשאת המיקום לא ניתנה. אפשר להמשיך בהזנת יישוב ידנית.");
         areaInput.focus();
       },

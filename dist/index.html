@@ -7,6 +7,11 @@
       name="description"
       content="איתור קלפיות נגישות מיוחדות ובדיקת נגישות קלפי לפי יישוב ומספר קלפי."
     />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; base-uri 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' https://nominatim.openstreetmap.org; frame-src https://www.openstreetmap.org; form-action 'self'; upgrade-insecure-requests"
+    />
     <meta name="theme-color" content="#082f49" />
     <title>קלפי נגישה — איתור ובדיקת נגישות</title>
     <link
@@ -14,9 +19,9 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23082f49'/%3E%3Cpath d='M32 10c-10.5 0-19 8.2-19 18.4C13 41.9 32 56 32 56s19-14.1 19-27.6C51 18.2 42.5 10 32 10Z' fill='%2306b6d4'/%3E%3Ccircle cx='32' cy='28' r='9' fill='white'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="styles.css?v=20261003d" />
-    <script src="data.js?v=20261003d" defer></script>
-    <script src="app.js?v=20261003d" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20261003g" />
+    <script src="data.js?v=20261003g" defer></script>
+    <script src="app.js?v=20261003g" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">דלגו לתוכן המרכזי</a>
@@ -150,7 +155,7 @@
                 </button>
                 <p class="privacy-note">
                   איתור היישוב משתמש ב־<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.
-                  הקואורדינטות אינן נשמרות באתר.
+                  רק לאחר לחיצה, הקואורדינטות נשלחות לשירות Nominatim לצורך הזיהוי ואינן נשמרות באתר.
                 </p>
               </div>
             </form>
@@ -214,8 +219,8 @@
           <button id="clear-results" class="text-button" type="button">ניקוי תוצאות</button>
         </div>
         <p class="map-note">
-          מיקומי Google Maps נוצרים מכתובת טקסטואלית שבדוח ועלולים להיות משוערים. יש לבדוק את
-          היעד לפני היציאה; הקישור אינו מבטיח מסלול נגיש לכיסא גלגלים.
+          המפה והמיקומים נוצרים מכתובת טקסטואלית שבדוח ועלולים להיות משוערים. יש לבדוק את
+          היעד לפני היציאה; מסלול ההליכה אינו מבטיח מסלול נגיש לכיסא גלגלים.
         </p>
         <div id="results-list" class="results-list"></div>
         <button id="load-more" class="secondary-button load-more" type="button" hidden>
@@ -232,6 +237,44 @@
           <button id="clear-check" class="text-button" type="button">ניקוי תוצאה</button>
         </div>
         <div id="check-result"></div>
+      </section>
+
+      <section id="embedded-map-section" class="embedded-map-section" aria-labelledby="embedded-map-heading" hidden>
+        <div class="map-panel-header">
+          <div>
+            <p class="eyebrow">מפה בתוך האתר</p>
+            <h2 id="embedded-map-heading" tabindex="-1">מיקום הקלפי</h2>
+            <p id="embedded-map-address" class="map-panel-address"></p>
+          </div>
+          <button id="close-map" class="text-button" type="button">סגירת המפה</button>
+        </div>
+        <p id="embedded-map-status" class="map-status" role="status" aria-live="polite"></p>
+        <iframe
+          id="embedded-map"
+          class="embedded-map"
+          title="מפה משוערת של מיקום הקלפי"
+          loading="lazy"
+          referrerpolicy="strict-origin-when-cross-origin"
+          sandbox="allow-scripts allow-same-origin"
+          hidden
+        ></iframe>
+        <div class="map-panel-actions">
+          <a id="walking-route-link" class="primary-button map-primary-action" target="_blank" rel="noopener noreferrer">
+            מסלול הליכה ב־Google Maps
+            <span class="external-mark" aria-hidden="true">↗</span>
+          </a>
+          <a id="osm-map-link" class="secondary-button" target="_blank" rel="noopener noreferrer" hidden>
+            פתיחה ב־OpenStreetMap
+            <span class="external-mark" aria-hidden="true">↗</span>
+          </a>
+        </div>
+        <p class="map-disclaimer">
+          המיקום נגזר מהכתובת שבדוח ועלול להיות משוער. מסלול ההליכה מוצג בשירות חיצוני ואינו
+          בהכרח מסלול נגיש. בלחיצה על הצגת המפה, כתובת הקלפי נשלחת ל־Nominatim לצורך איתור.
+          נתוני המפה ותוצאות החיפוש: ©
+          <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>,
+          ברישיון ODbL.
+        </p>
       </section>
 
       <section class="help-strip" aria-labelledby="important-heading">
@@ -277,9 +320,15 @@
               התאמה. דוח 137 אינו כולל סטטוס של קלפי בודדת.
             </p>
             <p>
-              הדוחות אינם כוללים קואורדינטות. הקישורים ל־Google Maps מבוססים על שם המקום,
-              הכתובת והיישוב כפי שנרשמו בדוח, ולכן המיקום עשוי להיות משוער. האתר אינו מציג מרחק
-              ואינו מתחייב איזו קלפי היא הקרובה ביותר בנסיעה.
+              בבדיקת ההצלבה נמצאה התאמה מלאה בין הדוחות בכל 20 ועדות הבחירות: 6,208 קלפיות
+              נגישות ו־3,620 קלפיות נגישות מיוחדות. בדוח המפורט לא נמצאו מפתחות קלפי כפולים או
+              חסרים. מספרי היישובים והריכוזים בדוח הסטטיסטי גבוהים יותר משום שהוא כולל גם מקומות
+              שאין בהם קלפי נגישה בדוח המפורט.
+            </p>
+            <p>
+              הדוחות אינם כוללים קואורדינטות. המפה המוטמעת והקישורים ל־Google Maps מבוססים על
+              שם המקום, הכתובת והיישוב כפי שנרשמו בדוח, ולכן המיקום עשוי להיות משוער. האתר אינו
+              מציג מרחק ואינו מתחייב איזו קלפי היא הקרובה ביותר בהליכה או בנסיעה.
             </p>
             <p>
               אם מספר קלפי אינו מופיע בדוח המפורט, האתר יציג שאין מידע מספיק ולא יסיק שהקלפי
@@ -309,12 +358,15 @@
           </div>
         </dl>
         <div class="card-actions">
+          <button class="secondary-button embed-map-button" type="button">
+            מפה בתוך האתר
+          </button>
           <a class="secondary-button maps-link" target="_blank" rel="noopener noreferrer">
             הצגה במפות Google
             <span class="external-mark" aria-hidden="true">↗</span>
           </a>
           <a class="secondary-button directions-link" target="_blank" rel="noopener noreferrer">
-            קבלת מסלול
+            מסלול הליכה
             <span class="external-mark" aria-hidden="true">↗</span>
           </a>
           <button class="copy-button" type="button">העתקת כתובת</button>
