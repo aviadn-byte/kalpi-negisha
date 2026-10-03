@@ -186,6 +186,18 @@
       .map((entry) => entry.location);
   }
 
+  function googleMapsQuery(location) {
+    return [location.place, location.address, location.locality, "ישראל"].filter(Boolean).join(", ");
+  }
+
+  function googleMapsSearchUrl(location) {
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(googleMapsQuery(location))}`;
+  }
+
+  function googleMapsDirectionsUrl(location) {
+    return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(googleMapsQuery(location))}&dir_action=navigate`;
+  }
+
   function createResultCard(location) {
     const card = resultTemplate.content.firstElementChild.cloneNode(true);
     const addressText = [location.address, location.locality].filter(Boolean).join(", ");
@@ -198,8 +210,11 @@
       ? location.directions.join(". ")
       : "לא נמסרו הוראות גישה מפורטות בדוח.";
     const mapLink = card.querySelector(".maps-link");
-    mapLink.href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addressText)}`;
-    mapLink.setAttribute("aria-label", `פתיחת ${addressText} במפה בחלון חדש`);
+    mapLink.href = googleMapsSearchUrl(location);
+    mapLink.setAttribute("aria-label", `הצגת ${addressText} במפות Google בחלון חדש`);
+    const directionsLink = card.querySelector(".directions-link");
+    directionsLink.href = googleMapsDirectionsUrl(location);
+    directionsLink.setAttribute("aria-label", `קבלת מסלול אל ${addressText} במפות Google בחלון חדש`);
     const copyButton = card.querySelector(".copy-button");
     copyButton.addEventListener("click", async () => {
       try {
@@ -298,6 +313,8 @@
     const badge = status === "special" ? "נגישה מיוחדת" : "נגישה";
     const badgeClass = status === "special" ? "status-special" : "status-accessible";
     const directions = record.directions || "לא נמסרו הוראות גישה מפורטות בדוח.";
+    const mapsUrl = googleMapsSearchUrl(record);
+    const routeUrl = googleMapsDirectionsUrl(record);
     return `
       <article class="check-card ${status}">
         <span class="status-badge ${badgeClass}">${badge}</span>
@@ -309,6 +326,15 @@
           <div><dt>כתובת</dt><dd>${escapeHtml(addressText || "לא צוינה")}</dd></div>
           <div><dt>הוראות גישה</dt><dd>${escapeHtml(directions)}</dd></div>
         </dl>
+        <p class="inline-map-note">המיקום במפה מבוסס על כתובת טקסטואלית ועלול להיות משוער.</p>
+        <div class="card-actions check-actions">
+          <a class="secondary-button" href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener noreferrer" aria-label="הצגת ${escapeHtml(addressText)} במפות Google בחלון חדש">
+            הצגה במפות Google <span class="external-mark" aria-hidden="true">↗</span>
+          </a>
+          <a class="secondary-button" href="${escapeHtml(routeUrl)}" target="_blank" rel="noopener noreferrer" aria-label="קבלת מסלול אל ${escapeHtml(addressText)} במפות Google בחלון חדש">
+            קבלת מסלול <span class="external-mark" aria-hidden="true">↗</span>
+          </a>
+        </div>
       </article>`;
   }
 
@@ -473,6 +499,8 @@
               place: location.place,
               specialBallots: location.specialBallots,
               accessDirections: location.directions,
+              googleMapsUrl: googleMapsSearchUrl(location),
+              googleMapsDirectionsUrl: googleMapsDirectionsUrl(location),
             })),
           };
         },
@@ -531,6 +559,8 @@
             address: record.address,
             place: record.place,
             accessDirections: record.directions || null,
+            googleMapsUrl: googleMapsSearchUrl(record),
+            googleMapsDirectionsUrl: googleMapsDirectionsUrl(record),
           };
         },
       },

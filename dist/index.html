@@ -14,9 +14,9 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23082f49'/%3E%3Cpath d='M32 10c-10.5 0-19 8.2-19 18.4C13 41.9 32 56 32 56s19-14.1 19-27.6C51 18.2 42.5 10 32 10Z' fill='%2306b6d4'/%3E%3Ccircle cx='32' cy='28' r='9' fill='white'/%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="styles.css?v=20261003c" />
-    <script src="data.js?v=20261003c" defer></script>
-    <script src="app.js?v=20261003c" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20261003d" />
+    <script src="data.js?v=20261003d" defer></script>
+    <script src="app.js?v=20261003d" defer></script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">דלגו לתוכן המרכזי</a>
@@ -48,6 +48,18 @@
         <div class="data-summary" aria-label="סיכום המאגר">
           <strong id="special-count">3,620</strong>
           <span>קלפיות נגישות מיוחדות בדוח</span>
+        </div>
+      </section>
+
+      <section class="responsibility-notice" role="note" aria-labelledby="responsibility-heading">
+        <div class="notice-icon" aria-hidden="true">!</div>
+        <div>
+          <h2 id="responsibility-heading">חשוב לפני השימוש</h2>
+          <p>
+            <strong>זה אינו אתר רשמי.</strong> המידע מבוסס על קובצי המקור שהועלו, והשימוש באתר
+            ובתוצאותיו הוא באחריות המשתמש. יש לאמת את פרטי הקלפי ואת מצב הנגישות מול מקור רשמי
+            לפני ההצבעה.
+          </p>
         </div>
       </section>
 
@@ -201,6 +213,10 @@
           </div>
           <button id="clear-results" class="text-button" type="button">ניקוי תוצאות</button>
         </div>
+        <p class="map-note">
+          מיקומי Google Maps נוצרים מכתובת טקסטואלית שבדוח ועלולים להיות משוערים. יש לבדוק את
+          היעד לפני היציאה; הקישור אינו מבטיח מסלול נגיש לכיסא גלגלים.
+        </p>
         <div id="results-list" class="results-list"></div>
         <button id="load-more" class="secondary-button load-more" type="button" hidden>
           הצגת תוצאות נוספות
@@ -223,8 +239,9 @@
         <div>
           <h2 id="important-heading">חשוב לדעת לפני שיוצאים</h2>
           <p>
-            הרשימה מבוססת על דוחות שנת הפנקס שסופקו. מיקומי קלפיות עשויים להשתנות, ולכן מומלץ
-            לאמת את המקום בפרסום הרשמי סמוך למועד הבחירות.
+            אתר זה אינו רשמי. הרשימה מבוססת על דוחות שנת הפנקס שסופקו, מיקומי קלפיות עשויים
+            להשתנות, והשימוש במידע הוא באחריות המשתמש. יש לאמת את המקום ואת הנגישות בפרסום
+            הרשמי סמוך למועד הבחירות.
           </p>
         </div>
       </section>
@@ -255,9 +272,14 @@
           <summary>מקורות ומגבלות המידע</summary>
           <div class="details-content">
             <p>
-              החיפוש מבוסס על „דוח 104 קלפיות למוגבלי ניידות לשנת פנקס”. הסכומים מבוססים על
-              „דוח 137 סטטיסטי טופס ב׳ סופי”. הדוחות אינם כוללים קואורדינטות, ולכן האתר אינו
-              מציג מרחק או מתחייב איזו קלפי היא הקרובה ביותר בנסיעה.
+              שני קובצי ה־Excel משולבים באתר: „דוח 104 קלפיות למוגבלי ניידות לשנת פנקס” משמש
+              לחיפוש ולבדיקת קלפי מסוימת, ו„דוח 137 סטטיסטי טופס ב׳ סופי” משמש לסיכומים ולבקרת
+              התאמה. דוח 137 אינו כולל סטטוס של קלפי בודדת.
+            </p>
+            <p>
+              הדוחות אינם כוללים קואורדינטות. הקישורים ל־Google Maps מבוססים על שם המקום,
+              הכתובת והיישוב כפי שנרשמו בדוח, ולכן המיקום עשוי להיות משוער. האתר אינו מציג מרחק
+              ואינו מתחייב איזו קלפי היא הקרובה ביותר בנסיעה.
             </p>
             <p>
               אם מספר קלפי אינו מופיע בדוח המפורט, האתר יציג שאין מידע מספיק ולא יסיק שהקלפי
@@ -269,7 +291,7 @@
     </main>
 
     <footer>
-      <p>נבנה כדי להפוך מידע על קלפיות נגישות לפשוט יותר לאיתור.</p>
+      <p>אתר מידע לא רשמי • השימוש באחריות המשתמש • יש לאמת את הפרטים מול מקור רשמי</p>
     </footer>
 
     <template id="result-card-template">
@@ -288,7 +310,11 @@
         </dl>
         <div class="card-actions">
           <a class="secondary-button maps-link" target="_blank" rel="noopener noreferrer">
-            פתיחה במפה
+            הצגה במפות Google
+            <span class="external-mark" aria-hidden="true">↗</span>
+          </a>
+          <a class="secondary-button directions-link" target="_blank" rel="noopener noreferrer">
+            קבלת מסלול
             <span class="external-mark" aria-hidden="true">↗</span>
           </a>
           <button class="copy-button" type="button">העתקת כתובת</button>
