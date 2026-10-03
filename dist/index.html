@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="איתור קלפיות נגישות מיוחדות ובדיקת נגישות קלפי לפי יישוב ומספר קלפי."
+    />
+    <meta name="theme-color" content="#082f49" />
+    <title>קלפי נגישה — איתור ובדיקת נגישות</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23082f49'/%3E%3Cpath d='M32 10c-10.5 0-19 8.2-19 18.4C13 41.9 32 56 32 56s19-14.1 19-27.6C51 18.2 42.5 10 32 10Z' fill='%2306b6d4'/%3E%3Ccircle cx='32' cy='28' r='9' fill='white'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css?v=20261003c" />
+    <script src="data.js?v=20261003c" defer></script>
+    <script src="app.js?v=20261003c" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">דלגו לתוכן המרכזי</a>
+
+    <header class="site-header">
+      <div class="header-inner">
+        <a class="brand" href="#top" aria-label="קלפי נגישה — דף הבית">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" role="img">
+              <path d="M24 4C14.6 4 7 11.4 7 20.6 7 32.7 24 45 24 45s17-12.3 17-24.4C41 11.4 33.4 4 24 4Z" />
+              <circle cx="24" cy="20" r="7" />
+            </svg>
+          </span>
+          <span>קלפי נגישה</span>
+        </a>
+        <a class="header-link" href="#about-data">על המידע</a>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1">
+      <section class="intro" id="top" aria-labelledby="page-title">
+        <div class="intro-copy">
+          <p class="eyebrow">שירות איתור פשוט ונגיש</p>
+          <h1 id="page-title">מוצאים קלפי נגישה שמתאימה לכם</h1>
+          <p class="lead">
+            חפשו קלפי נגישה מיוחדת לפי יישוב או כתובת, או בדקו את נגישות הקלפי שלכם לפי מספר.
+          </p>
+        </div>
+        <div class="data-summary" aria-label="סיכום המאגר">
+          <strong id="special-count">3,620</strong>
+          <span>קלפיות נגישות מיוחדות בדוח</span>
+        </div>
+      </section>
+
+      <section class="search-workspace" aria-labelledby="search-heading">
+        <h2 id="search-heading" class="visually-hidden">חיפוש ובדיקת קלפי</h2>
+
+        <div class="mode-switch" role="tablist" aria-label="בחרו סוג בדיקה">
+          <button
+            class="mode-tab is-active"
+            id="find-tab"
+            type="button"
+            role="tab"
+            aria-selected="true"
+            aria-controls="find-panel"
+            tabindex="0"
+            data-panel="find-panel"
+          >
+            <span class="tab-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M12 21s7-5.2 7-12A7 7 0 1 0 5 9c0 6.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+            </span>
+            למצוא קלפי מיוחדת
+          </button>
+          <button
+            class="mode-tab"
+            id="check-tab"
+            type="button"
+            role="tab"
+            aria-selected="false"
+            aria-controls="check-panel"
+            tabindex="-1"
+            data-panel="check-panel"
+          >
+            <span class="tab-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 8h8M8 12h5M8 16h3"/></svg>
+            </span>
+            לבדוק את הקלפי שלי
+          </button>
+        </div>
+
+        <div class="panel-shell">
+          <div id="find-panel" class="mode-panel" role="tabpanel" aria-labelledby="find-tab">
+            <form id="find-form" novalidate>
+              <div class="form-heading">
+                <div>
+                  <h3>איפה תרצו להצביע?</h3>
+                  <p>אפשר להזין יישוב, רחוב או כתובת מלאה.</p>
+                </div>
+                <span class="step-marker" aria-hidden="true">1</span>
+              </div>
+
+              <div class="search-row">
+                <div class="field-group grow">
+                  <label for="area-query">יישוב או כתובת</label>
+                  <div class="input-wrap">
+                    <span class="input-icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                    </span>
+                    <input
+                      id="area-query"
+                      name="area"
+                      type="search"
+                      inputmode="search"
+                      autocomplete="address-level2"
+                      list="locality-list"
+                      aria-describedby="area-hint area-error"
+                      placeholder="לדוגמה: ירושלים או נטר 40, ירושלים"
+                    />
+                  </div>
+                  <p id="area-hint" class="field-hint">החיפוש עובד גם בלי הרשאת מיקום.</p>
+                  <p id="area-error" class="field-error" role="alert" hidden></p>
+                </div>
+
+                <button class="primary-button" type="submit">
+                  <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></svg>
+                  </span>
+                  חיפוש קלפי
+                </button>
+              </div>
+
+              <div class="location-option">
+                <span class="option-separator" aria-hidden="true">או</span>
+                <button class="location-button" id="use-location" type="button">
+                  <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M12 21s7-5.2 7-12A7 7 0 1 0 5 9c0 6.8 7 12 7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+                  </span>
+                  איתור היישוב שלי
+                </button>
+                <p class="privacy-note">
+                  איתור היישוב משתמש ב־<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>.
+                  הקואורדינטות אינן נשמרות באתר.
+                </p>
+              </div>
+            </form>
+          </div>
+
+          <div id="check-panel" class="mode-panel" role="tabpanel" aria-labelledby="check-tab" hidden>
+            <form id="check-form" novalidate>
+              <div class="form-heading">
+                <div>
+                  <h3>בדיקת הקלפי שלכם</h3>
+                  <p>מספרי קלפי חוזרים ביישובים שונים, לכן נדרשים שני הפרטים.</p>
+                </div>
+                <span class="step-marker" aria-hidden="true">2</span>
+              </div>
+
+              <div class="check-fields">
+                <div class="field-group grow">
+                  <label for="check-locality">יישוב הקלפי</label>
+                  <input
+                    id="check-locality"
+                    name="locality"
+                    type="text"
+                    autocomplete="address-level2"
+                    list="locality-list"
+                    aria-describedby="check-locality-error"
+                    placeholder="לדוגמה: חיפה"
+                  />
+                  <p id="check-locality-error" class="field-error" role="alert" hidden></p>
+                </div>
+                <div class="field-group ballot-field">
+                  <label for="ballot-number">מספר קלפי</label>
+                  <input
+                    id="ballot-number"
+                    name="ballot"
+                    type="text"
+                    inputmode="decimal"
+                    autocomplete="off"
+                    aria-describedby="ballot-error"
+                    placeholder="לדוגמה: 11.2"
+                  />
+                  <p id="ballot-error" class="field-error" role="alert" hidden></p>
+                </div>
+                <button class="primary-button" type="submit">בדיקת נגישות</button>
+              </div>
+            </form>
+          </div>
+
+          <datalist id="locality-list"></datalist>
+        </div>
+      </section>
+
+      <div id="live-status" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
+
+      <section id="results-section" class="results-section" aria-labelledby="results-heading" hidden>
+        <div class="results-header">
+          <div>
+            <p id="results-kicker" class="eyebrow">תוצאות החיפוש</p>
+            <h2 id="results-heading" tabindex="-1">קלפיות נגישות מיוחדות</h2>
+            <p id="results-note" class="results-note"></p>
+          </div>
+          <button id="clear-results" class="text-button" type="button">ניקוי תוצאות</button>
+        </div>
+        <div id="results-list" class="results-list"></div>
+        <button id="load-more" class="secondary-button load-more" type="button" hidden>
+          הצגת תוצאות נוספות
+        </button>
+      </section>
+
+      <section id="check-result-section" class="check-result-section" aria-labelledby="check-result-heading" hidden>
+        <div class="results-header">
+          <div>
+            <p class="eyebrow">בדיקת הקלפי</p>
+            <h2 id="check-result-heading" tabindex="-1">תוצאת הבדיקה</h2>
+          </div>
+          <button id="clear-check" class="text-button" type="button">ניקוי תוצאה</button>
+        </div>
+        <div id="check-result"></div>
+      </section>
+
+      <section class="help-strip" aria-labelledby="important-heading">
+        <div class="help-icon" aria-hidden="true">!</div>
+        <div>
+          <h2 id="important-heading">חשוב לדעת לפני שיוצאים</h2>
+          <p>
+            הרשימה מבוססת על דוחות שנת הפנקס שסופקו. מיקומי קלפיות עשויים להשתנות, ולכן מומלץ
+            לאמת את המקום בפרסום הרשמי סמוך למועד הבחירות.
+          </p>
+        </div>
+      </section>
+
+      <section class="about-data" id="about-data" aria-labelledby="about-heading">
+        <div>
+          <p class="eyebrow">על המאגר</p>
+          <h2 id="about-heading">מה אפשר לדעת מהדוחות?</h2>
+        </div>
+        <div class="about-grid">
+          <article>
+            <span class="about-number" id="accessible-count">6,208</span>
+            <h3>קלפיות נגישות</h3>
+            <p>בדוח המפורט מופיעות הקלפיות שסומנו כנגישות, עם כתובת ומקום ההצבעה.</p>
+          </article>
+          <article>
+            <span class="about-number" id="special-count-bottom">3,620</span>
+            <h3>נגישות מיוחדות</h3>
+            <p>קלפיות שסומנו במפורש כ״נגישה מיוחדת״ ומוצגות בחיפוש הראשי.</p>
+          </article>
+          <article>
+            <span class="about-number" id="locality-count">1,224</span>
+            <h3>יישובים בדוח הסטטיסטי</h3>
+            <p>הדוח הסטטיסטי משמש לבקרת הסכומים בלבד ולא לקביעת נגישות של קלפי מסוימת.</p>
+          </article>
+        </div>
+        <details>
+          <summary>מקורות ומגבלות המידע</summary>
+          <div class="details-content">
+            <p>
+              החיפוש מבוסס על „דוח 104 קלפיות למוגבלי ניידות לשנת פנקס”. הסכומים מבוססים על
+              „דוח 137 סטטיסטי טופס ב׳ סופי”. הדוחות אינם כוללים קואורדינטות, ולכן האתר אינו
+              מציג מרחק או מתחייב איזו קלפי היא הקרובה ביותר בנסיעה.
+            </p>
+            <p>
+              אם מספר קלפי אינו מופיע בדוח המפורט, האתר יציג שאין מידע מספיק ולא יסיק שהקלפי
+              אינה נגישה.
+            </p>
+          </div>
+        </details>
+      </section>
+    </main>
+
+    <footer>
+      <p>נבנה כדי להפוך מידע על קלפיות נגישות לפשוט יותר לאיתור.</p>
+    </footer>
+
+    <template id="result-card-template">
+      <article class="result-card">
+        <div class="card-status-row">
+          <span class="status-badge status-special">נגישה מיוחדת</span>
+          <span class="ballot-list"></span>
+        </div>
+        <h3 class="place-name"></h3>
+        <p class="address-line"></p>
+        <dl class="access-details">
+          <div>
+            <dt>הוראות גישה</dt>
+            <dd class="directions-text"></dd>
+          </div>
+        </dl>
+        <div class="card-actions">
+          <a class="secondary-button maps-link" target="_blank" rel="noopener noreferrer">
+            פתיחה במפה
+            <span class="external-mark" aria-hidden="true">↗</span>
+          </a>
+          <button class="copy-button" type="button">העתקת כתובת</button>
+        </div>
+      </article>
+    </template>
+  </body>
+</html>
